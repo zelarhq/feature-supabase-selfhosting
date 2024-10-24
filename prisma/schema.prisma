@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model accounts {
+  id                                String     @id @default(uuid()) @db.Uuid
+  owner                             String
+  creation_time                     DateTime   @db.Timestamptz
+  api_key                           String
+  name                              String
+  subscription_created              DateTime?  @db.Timestamptz
+  subscription_ended                DateTime?  @db.Timestamptz
+  subscription_current_period_start DateTime?  @db.Timestamptz
+  stripe_active_subscription_id     String?
+  billing_state                     String?
+  subscription_current_period_end   DateTime?  @db.Timestamptz
+  price                             Decimal    @db.Decimal
+  payment_cycle                     String?
+  billing_country                   String?
+  currency                          String?
+  plan                              String?
+  access_count                      Int?
+  admin_count                       Int?
+  subscription_status               String?
+  access                            String[]
+  admins                            String[]
+  datacenter_id                     String     @db.Uuid
+  invoices                          invoices[]
+}
+
+model activities {
+  activity_id   Int      @id @default(autoincrement()) @db.Integer
+  user_id       String   @db.Uuid
+  activity      String
+  activity_time DateTime @db.Timestamptz
+  user          users    @relation(fields: [user_id], references: [uid])
+}
+
+model cluster_resources {
+  id   String @id @db.VarChar
+  CPU  Int    @db.SmallInt
+  RAM  Int    @db.SmallInt
+  SSD  Int    @db.SmallInt
+  name String @db.VarChar
+  size String @db.VarChar
+}
+
+model clusters {
+  uid              String   @id @default(uuid()) @db.Uuid
+  id               BigInt
+  account_id       String
+  created_date     DateTime @db.Timestamptz
+  datacenter_id    String
+  description      String?
+  expiry           DateTime @db.Timestamptz
+  features         Json
+  kubeconfig       String
+  kubeconfig_dlink String?
+  name             String
+  owner            String
+  size             String
+  status           String
+  version          String
+}
+
+model datacenters {
+  uid            String @id @default(uuid()) @db.Uuid
+  owner          String
+  password       String
+  provider       String
+  sub_domain     String
+  managed        String
+  name           String
+  cidr           String
+  id             BigInt
+  apps_subdomain String
+  external_ip    String
+  username       String
+  plans          Json
+  project_url    String
+  project_key    String
+}
+
+model invites {
+  id           BigInt   @id @default(autoincrement())
+  hashed_email String
+  owner        String
+  account      String
+  role         String
+  time         DateTime @db.Timestamptz
+  uid          String   @db.Uuid
+}
+
+model invoices {
+  id                 String   @id
+  total              Decimal  @db.Decimal
+  sub_total          Decimal  @db.Decimal
+  amount_due         Decimal  @db.Decimal
+  amount_paid        Decimal  @db.Decimal
+  tax                Decimal  @db.Decimal
+  currency           String
+  created            DateTime @db.Timestamptz
+  status             String
+  hosted_invoice_url String
+  account_id         String   @db.Uuid
+  account            accounts @relation(fields: [account_id], references: [id])
+}
+
+model kubeconfig {
+  id          String   @id @db.Uuid
+  url         String
+  clustername String
+  createdtime DateTime @db.Timestamptz
+  long_url    String
+  code        String
+}
+
+model marketplace {
+  uid                 String  @id @db.Uuid
+  values_reference    String
+  helm_repo_add       String
+  display_name        String
+  values              Json
+  id                  String
+  category            String
+  default_enable      Boolean
+  show_in_marketplace Boolean
+  icon                String
+  description         String
+  know_more           String
+  namespace           String
+  default_yaml        String
+  version             String
+  label_check         Json
+  owned_by            String
+  customer_addon      Boolean
+  chart               String
+  optional_values     Json
+  credential_fields   Json
+  secret_command      String
+  doc_reference       String
+}
+
+model users {
+  id                 Int          @id @default(autoincrement())
+  uid                String       @unique @db.Uuid
+  accepted           Boolean
+  displayname        String       @db.VarChar
+  lastlogintime      DateTime     @db.Timestamptz
+  photourl           String
+  creationtime       DateTime     @db.Timestamptz
+  stripe_customer_id String?
+  slack_keys         Json?
+  activities         activities[]
+}
